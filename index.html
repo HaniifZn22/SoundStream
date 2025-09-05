@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundStream</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fff, #f0f8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .player-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .song-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .song-title {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .song-duration {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 20px 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .control-btn.play {
+            width: 80px;
+            height: 80px;
+            font-size: 2em;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .volume-slider {
+            width: 100px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .lyrics-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .lyrics-content {
+            line-height: 1.8;
+            font-size: 1.1em;
+            white-space: pre-wrap;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .controls {
+                gap: 15px;
+            }
+            
+            .control-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2em;
+            }
+            
+            .control-btn.play {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8em;
+            }
+        }
+
+        /* Scrollbar styling */
+        .lyrics-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .lyrics-section::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .lyrics-section::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .lyrics-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="player-section">
+            <div class="song-info">
+                <!-- Ubah judul lagu di sini -->
+                <div class="song-title" id="songTitle">Nurista - by HaniifZn</div>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="time-display">
+                <span id="currentTime">00:00</span>
+                <span id="totalTime">00:00</span>
+            </div>
+
+            <div class="controls">
+                <!-- Tombol ini tidak berfungsi untuk satu lagu -->
+                <button class="control-btn" id="prevBtn" title="Sebelumnya" disabled>
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <button class="control-btn play" id="playBtn" title="Putar/Jeda">
+                    <i class="fas fa-play"></i>
+                </button>
+                <!-- Tombol ini tidak berfungsi untuk satu lagu -->
+                <button class="control-btn" id="nextBtn" title="Berikutnya" disabled>
+                    <i class="fas fa-step-forward"></i>
+                </button>
+                <button class="control-btn" id="stopBtn" title="Stop">
+                    <i class="fas fa-stop"></i>
+                </button>
+            </div>
+
+            <div class="volume-container">
+                <i class="fas fa-volume-down"></i>
+                <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70">
+                <i class="fas fa-volume-up"></i>
+            </div>
+
+            <!-- Anda dapat mengganti URL di sini dengan tautan file audio .m4a publik Anda -->
+            <audio id="audioPlayer" preload="metadata" src="https://haniifzn22.github.io/mis.-audio-host/Nurista.m4a"></audio>
+        </div>
+
+        <div class="lyrics-section">
+            <h3 style="margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-scroll"></i> Lirik Lagu
+            </h3>
+            <div class="lyrics-content" id="lyricsContent">
+                <!-- Lirik lagu -->
+Intro :  
+F G Am  
+F G Am  
+F G C G Am  
+Dm G C  
+
+C        F        G        C  
+ada senyum yang slalu kuingat  
+C        F        G        C  
+diam tenang menyelinap di malam  
+C        F        G            Am  
+bagai nyala yang tak pernah padam  
+        Dm        G        C  
+hangatnya kini hidup kembali  
+
+C        F        G        C  
+setiap pagi ku mulai bicara  
+C        F        G        C  
+tentang hati yang mulai bersuara  
+C        F        G             Am  
+tak tergesa dan tak ingin memaksa  
+        Dm        G        C  
+asal kau tahu ku masih ada rasa  
+
+F        G        C        Am  
+tak kulupa senyumanmu yang manis  
+Dm        G           C       C7  
+cukup alasan untuk ku bertahan  
+F        G        C    G   Am  
+ku percaya waktu akan membuka  
+Dm        G        C  
+jalan pelan menuju hatimu  
+
+F G C Am  
+Dm G C C7  
+F G C G Am  
+Dm G C  
+
+C            F       G         C  
+meski kau belum sepenuhnya percaya  
+       Dm        G        C      C7  
+tak mengapa ku rela menunggumu  
+C            F        G        C  
+meski kau belum sepenuhnya terima  
+       F       G        C  
+semua ini kulakukan untukmu  
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let audioPlayer = document.getElementById('audioPlayer');
+        let playBtn = document.getElementById('playBtn');
+        let progressBar = document.getElementById('progressBar');
+        let progressContainer = document.getElementById('progressContainer');
+        let currentTimeSpan = document.getElementById('currentTime');
+        let totalTimeSpan = document.getElementById('totalTime');
+        let volumeSlider = document.getElementById('volumeSlider');
+        let songTitle = document.getElementById('songTitle');
+        let lyricsContent = document.getElementById('lyricsContent');
+        let prevBtn = document.getElementById('prevBtn');
+        let nextBtn = document.getElementById('nextBtn');
+        let stopBtn = document.getElementById('stopBtn');
+
+        // Initialize volume
+        audioPlayer.volume = 0.7;
+
+        // Function to format time
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Event listener: Audio metadata loaded
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            totalTimeSpan.textContent = formatTime(audioPlayer.duration);
+        });
+
+        // Event listener: Audio time update
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (audioPlayer.duration) {
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressBar.style.width = progress + '%';
+                currentTimeSpan.textContent = formatTime(audioPlayer.currentTime);
+            }
+        });
+
+        // Event listener: Audio ended
+        audioPlayer.addEventListener('ended', () => {
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        // Event listener: Play/Pause button click
+        playBtn.addEventListener('click', () => {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                audioPlayer.pause();
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        });
+        
+        // Event listener: Stop button click
+        stopBtn.addEventListener('click', () => {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        // Event listener: Progress bar click to seek
+        progressContainer.addEventListener('click', (e) => {
+            if (audioPlayer.duration) {
+                const clickX = e.offsetX;
+                const width = progressContainer.offsetWidth;
+                const duration = audioPlayer.duration;
+                audioPlayer.currentTime = (clickX / width) * duration;
+            }
+        });
+
+        // Event listener: Volume control
+        volumeSlider.addEventListener('input', (e) => {
+            audioPlayer.volume = e.target.value / 100;
+        });
+        
+        // Disable prev and next buttons since there's only one song
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                playBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
